@@ -111,16 +111,28 @@ remembering. Do not copy a skill's contents in here — it will drift out of syn
 
 ## Memory
 
-`memory/experiments/*.md` — one file per run, human-readable, meant to be
-opened and read. `memory/index.jsonl` — the same facts, machine-queryable, for
-retrieval. `memory/LEARNED.md` — the rolled-up standing conclusions.
+| File | What it is |
+|---|---|
+| `memory/experiments/<id>.md` | one file per run, written to be opened and read |
+| `memory/index.jsonl` | the same facts, machine-queryable — what retrieval reads |
+| `memory/LEARNED.md` | the rolled-up standing conclusions, regenerated on write |
 
-Outcomes land days after generation. `adbrain outcome` backfills them. A run
-with no outcome yet is not a failure; it is pending.
+Both representations are written by `memory.write()` from one record. Nothing
+else may write either — that is the only place they can drift.
+
+Outcomes land days after generation, so an experiment starts `pending` and is
+resolved later with `adbrain outcome`. **An experiment that stays pending
+forever taught us nothing**; `LEARNED.md` lists them separately and marks
+anything over 21 days overdue.
+
+Retrieval weights **losses above wins**, because re-testing an angle that
+already failed is the single most expensive mistake this system exists to
+prevent. Be accurate with verdicts — a mixed result is `flat`, not `won`.
+Overstating one poisons every future brief.
 
 Category observations from Phase 4 land in the same log tagged
-`source: external` so the copy agent sees owned tests and category movement
-together.
+`source: external`, so when the copy agent generates it sees both what we have
+tested and what the category is currently running.
 
 ## When you touch this repo
 

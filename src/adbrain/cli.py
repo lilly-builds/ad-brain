@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 from . import brief as brief_mod
-from . import bulk, config, ingest, platforms, rank, report, runs, validate
+from . import bulk, config, ingest, memory, platforms, rank, report, runs, validate
 
 
 def _fail(message: str) -> int:
@@ -197,6 +197,86 @@ def cmd_build(args) -> int:
     return 0
 
 
+def cmd_log(args) -> int:
+    run = runs.resolve(args.run)
+    brief_data = runs.read_json(run, runs.BRIEF_JSON)
+    candidates = runs.read_json(run, runs.CANDIDATES).get("generated", [])
+    if not candidates:
+        return _fail("nothing to log — this run generated no candidates")
+
+    exp = memory.from_run(run.name, brief_data, candidates, notes=args.notes or "")
+    if args.hypothesis:
+        exp.hypothesis = args.hypothesis
+    path = memory.write(exp)
+    memory.save_learned()
+
+    print(f"\n  logged {exp.id}")
+    print(f"    {exp.variables['ads_replaced']} ads · "
+          f"{exp.variables['lines_generated']} lines · verdict pending")
+    if exp.hypothesis:
+        print(f"    testing: {exp.hypothesis[:100]}")
+    print(f"\n  written to {path.relative_to(config.repo_root())}")
+    print(f"\n  in 7–14 days, close the loop:")
+    print(f'    python3 -m adbrain outcome --experiment {exp.id} \\')
+    print(f'        --verdict won --finding "what we now believe"\n')
+    return 0
+
+
+def cmd_outcome(args) -> int:
+    exp = memory.record_outcome(
+        args.experiment,
+        verdict=args.verdict,
+        finding=args.finding or "",
+        metrics=_parse_metrics(args.metric),
+    )
+    memory.save_learned()
+    mark = {"won": "✓", "lost": "✗", "flat": "—", "pending": "…"}[exp.verdict]
+    print(f"\n  {mark} {exp.id} recorded as {exp.verdict}")
+    if exp.finding:
+        print(f"    {exp.finding}")
+    print(f"\n  future briefs will carry this. memory/LEARNED.md updated.\n")
+    return 0
+
+
+def _parse_metrics(pairs: list[str] | None) -> dict:
+    """Turn --metric ctr=3.4 --metric conversions=18 into a dict."""
+    out: dict = {}
+    for pair in pairs or []:
+        if "=" not in pair:
+            raise ValueError(f"--metric expects name=value, got {pair!r}")
+        name, _, value = pair.partition("=")
+        try:
+            out[name.strip()] = float(value)
+        except ValueError:
+            out[name.strip()] = value.strip()
+    return out
+
+
+def cmd_learned(args) -> int:
+    path = memory.save_learned()
+    print()
+    print(memory.render_learned())
+    print(f"  written to {path.relative_to(config.repo_root())}\n")
+    return 0
+
+
+def cmd_recall(args) -> int:
+    items = memory.recall(args.platform, focus=args.focus or "", limit=args.limit)
+    if not items:
+        print("\n  nothing in memory yet — the log fills as runs complete\n")
+        return 0
+    print(f"\n  what a brief for {args.platform} would carry:\n")
+    marks = {"won": "✅", "lost": "❌", "flat": "➖", "pending": "⏳"}
+    for item in items:
+        tag = " [category]" if item["source"] == "external" else ""
+        print(f"  {marks.get(item['verdict'], '?')} {item['angle']}{tag}")
+        if item["finding"]:
+            print(f"      {item['finding']}")
+        print(f"      {item['logged_at']} · {item['run_id']}")
+    print()
+    return 0
+
+
 def cmd_limits(args) -> int:
     keys = [args.platform] if args.platform else platforms.available()
     for key in keys:
@@ -240,6 +320,29 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("build", help="write the bulk-upload CSV and the change report")
     p.add_argument("--run", default="latest")
     p.set_defaults(func=cmd_build)
+
+    p = sub.add_parser("log", help="record what this run tested, into the experiment log")
+    p.add_argument("--run", default="latest")
+    p.add_argument("--hypothesis", help="override the hypothesis captured from the candidates")
+    p.add_argument("--notes", help="anything else worth remembering about this run")
+    p.set_defaults(func=cmd_log)
+
+    p = sub.add_parser("outcome", help="record how an experiment actually performed")
+    p.add_argument("--experiment", required=True, help="experiment id (the run id)")
+    p.add_argument("--verdict", required=True, choices=list(memory.VERDICTS))
+    p.add_argument("--finding", help="what we now believe, in one sentence")
+    p.add_argument("--metric", action="append",
+                   help="name=value, repeatable (e.g. --metric ctr=3.4)")
+    p.set_defaults(func=cmd_outcome)
+
+    p = sub.add_parser("learned", help="show and rewrite the rolled-up conclusions")
+    p.set_defaults(func=cmd_learned)
+
+    p = sub.add_parser("recall", help="show what memory would inject into a brief")
+    p.add_argument("--platform", required=True, choices=platforms.available())
+    p.add_argument("--focus", help="topic to weight retrieval toward")
+    p.add_argument("--limit", type=int, default=12)
+    p.set_defaults(func=cmd_recall)
 
     p = sub.add_parser("limits", help="show the character limits in force")
     p.add_argument("--platform", choices=platforms.available())
