@@ -1,0 +1,115 @@
+# Underperformer detection — plain-language rules.
+#
+# You can change every threshold in this file without touching code. Each rule
+# carries a `plain_english` line that gets printed verbatim in the diff report
+# as the reason an ad was flagged, so the report always explains itself.
+#
+# compare modes:
+#   absolute              — compare the raw metric to `value`
+#   percentile            — compare the ad's rank within this export (0-100)
+#   ratio_to_account_mean — metric / mean of all significant ads in the export
+#
+# metrics available: impressions, clicks, ctr, conversions, spend, cpc, cpa, conv_rate, days_live
+# operators: <  <=  >  >=  ==  !=
+
+# ---------------------------------------------------------------------------
+# Significance gate. An ad must clear this before ANY rule can flag it.
+# Without it you flag ads that simply have not had a fair chance to run.
+# ---------------------------------------------------------------------------
+[significance]
+min_impressions = 500
+min_days_live = 7
+plain_english = "at least 500 impressions and 7 days live before we judge it"
+
+# ---------------------------------------------------------------------------
+# Rules. An ad is flagged if it matches ANY rule. All conditions inside a
+# single rule must match (they are ANDed together).
+# Severity drives ordering in the report: high > medium > low.
+# ---------------------------------------------------------------------------
+
+[[rules]]
+name = "spend_no_conversions"
+plain_english = "spent over $100 and produced no conversions"
+severity = "high"
+  [[rules.conditions]]
+  metric = "spend"
+  compare = "absolute"
+  operator = ">"
+  value = 100.0
+  [[rules.conditions]]
+  metric = "conversions"
+  compare = "absolute"
+  operator = "=="
+  value = 0.0
+
+[[rules]]
+name = "ctr_far_below_account"
+plain_english = "click-through rate is less than 60% of the account average"
+severity = "high"
+  [[rules.conditions]]
+  metric = "ctr"
+  compare = "ratio_to_account_mean"
+  operator = "<"
+  value = 0.6
+
+[[rules]]
+name = "bottom_quartile_ctr"
+plain_english = "click-through rate is in the worst 25% of ads in this export"
+severity = "medium"
+  [[rules.conditions]]
+  metric = "ctr"
+  compare = "percentile"
+  operator = "<"
+  value = 25.0
+
+[[rules]]
+name = "cpa_double_target"
+plain_english = "cost per acquisition is more than double the $150 target"
+severity = "high"
+  [[rules.conditions]]
+  metric = "cpa"
+  compare = "absolute"
+  operator = ">"
+  value = 300.0
+
+[[rules]]
+name = "stale_and_mediocre"
+plain_english = "has been running over 90 days and is below the account average on clicks"
+severity = "low"
+  [[rules.conditions]]
+  metric = "days_live"
+  compare = "absolute"
+  operator = ">"
+  value = 90.0
+  [[rules.conditions]]
+  metric = "ctr"
+  compare = "ratio_to_account_mean"
+  operator = "<"
+  value = 1.0
+
+# ---------------------------------------------------------------------------
+# Winners. Ads matching these are NEVER flagged, and are passed to the copy
+# agent as positive examples — "this is what is working, write more like it."
+# ---------------------------------------------------------------------------
+[[winners]]
+name = "top_decile_ctr"
+plain_english = "click-through rate is in the best 10% of ads in this export"
+  [[winners.conditions]]
+  metric = "ctr"
+  compare = "percentile"
+  operator = ">="
+  value = 90.0
+
+[[winners]]
+name = "efficient_converter"
+plain_english = "produced at least 3 conversions under the $150 target cost"
+  [[winners.conditions]]
+  metric = "conversions"
+  compare = "absolute"
+  operator = ">="
+  value = 3.0
+  [[winners.conditions]]
+  metric = "cpa"
+  compare = "absolute"
+  operator = "<="
+  value = 150.0

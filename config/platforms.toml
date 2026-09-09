@@ -1,0 +1,121 @@
+# Platform character limits — the single source of truth for validation.
+#
+# These are enforced PROGRAMMATICALLY (src/adbrain/platforms.py), not just asked
+# for in a prompt. Anything over limit is rejected and regenerated, never
+# truncated. Edit numbers here and every check downstream picks them up.
+#
+# "limit"  = hard gate. Copy over this is rejected.
+# "hard_max" = the platform's true API maximum, recorded for reference. We
+#            deliberately gate on the *recommended* display limit instead,
+#            because copy that is accepted by the API but truncated in the feed
+#            is a silent failure. See DECISIONS.md #4.
+
+[google_rsa]
+label = "Google Ads — Responsive Search Ad"
+bulk_format = "google_rsa_editor"
+
+  [google_rsa.fields.headline]
+  limit = 30
+  min_count = 3
+  max_count = 15
+
+  [google_rsa.fields.description]
+  limit = 90
+  min_count = 2
+  max_count = 4
+
+  [google_rsa.fields.path1]
+  limit = 15
+  min_count = 0
+  max_count = 1
+
+  [google_rsa.fields.path2]
+  limit = 15
+  min_count = 0
+  max_count = 1
+
+[google_pmax]
+label = "Google Ads — Performance Max"
+bulk_format = "google_pmax_editor"
+
+  [google_pmax.fields.headline]
+  limit = 30
+  min_count = 5
+  max_count = 15
+
+  [google_pmax.fields.long_headline]
+  limit = 90
+  min_count = 5
+  max_count = 5
+
+  [google_pmax.fields.description]
+  limit = 90
+  min_count = 1
+  max_count = 5
+
+  [google_pmax.fields.business_name]
+  limit = 25
+  min_count = 1
+  max_count = 1
+
+[meta]
+label = "Meta Ads — Facebook & Instagram"
+bulk_format = "meta_ads_manager"
+
+  [meta.fields.primary_text]
+  limit = 125
+  hard_max = 2200
+  min_count = 1
+  max_count = 5
+
+  [meta.fields.headline]
+  limit = 40
+  hard_max = 255
+  min_count = 1
+  max_count = 5
+
+  [meta.fields.description]
+  limit = 30
+  hard_max = 255
+  min_count = 0
+  max_count = 5
+
+[linkedin]
+label = "LinkedIn — Single Image Ad"
+bulk_format = "linkedin_csv"
+
+  [linkedin.fields.intro_text]
+  limit = 150
+  hard_max = 600
+  min_count = 1
+  max_count = 5
+
+  [linkedin.fields.headline]
+  limit = 70
+  hard_max = 200
+  min_count = 1
+  max_count = 5
+
+  [linkedin.fields.description]
+  limit = 100
+  min_count = 0
+  max_count = 5
+
+[tiktok]
+label = "TikTok Ads"
+bulk_format = "tiktok_csv"
+
+  [tiktok.fields.ad_text]
+  limit = 100
+  min_count = 1
+  max_count = 5
+
+  [tiktok.fields.product_name]
+  limit = 40
+  min_count = 0
+  max_count = 1
+
+  [tiktok.fields.selling_point]
+  limit = 25
+  min_count = 0
+  max_count = 4

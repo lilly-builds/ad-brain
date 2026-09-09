@@ -1,0 +1,21 @@
+# credentials — never commit
+.env
+*.pem
+*.key
+
+# platform exports may contain account data
+data/inbox/*
+!data/inbox/.gitkeep
+data/out/*
+!data/out/.gitkeep
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# os
+.DS_Store

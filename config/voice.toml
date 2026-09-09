@@ -1,0 +1,78 @@
+# Opterra voice rules, in machine-enforceable form.
+#
+# Source of truth for humans is brand/voice.md. This file is the subset a
+# program can actually check. Every generated line is run through these before
+# it is allowed into an output file.
+#
+# severity = "error"   -> line is rejected and sent back for regeneration
+# severity = "warn"    -> line passes but is listed in the report for review
+
+[case]
+severity = "error"
+rule = "lowercase"
+plain_english = "all ad copy is lowercase — no sentence case, no title case, no ALL CAPS"
+# Tokens allowed to keep their capitalisation despite the lowercase rule.
+# Add client names and proper nouns here as they come up.
+allow_capitalized = [
+  "Opterra",
+  "Mindbody",
+  "Vagaro",
+  "Zenoti",
+  "Mangomint",
+  "Jane App",
+  "Dawn",
+  "West Asheville Acupuncture",
+  "Dr. Kristi",
+]
+
+[emoji]
+severity = "error"
+plain_english = "no emoji in ad copy, on any platform"
+
+[banned_terms]
+severity = "error"
+plain_english = "words and phrases that are off-voice for Opterra"
+
+  [[banned_terms.entries]]
+  pattern = "healer"
+  reason = "never call the audience healers — use 'practice owner', 'wellness business owner', or 'you'"
+
+  [[banned_terms.entries]]
+  pattern = "you're losing|you are losing|losing money|lost revenue"
+  reason = "fear-based framing — Opterra never sells on loss"
+
+  [[banned_terms.entries]]
+  pattern = "don't miss out|dont miss out|missing out|before it's too late|last chance|act now|hurry"
+  reason = "manufactured urgency — banned unless the scarcity is genuine and named"
+
+  [[banned_terms.entries]]
+  pattern = "cutting.edge|state.of.the.art|revolutionary|game.chang|best.in.class|world.class"
+  reason = "corporate filler — says nothing a practice owner can picture"
+
+  [[banned_terms.entries]]
+  pattern = "streamline|leverage|synergy|robust|seamless|empower|unlock|supercharge|turbocharge"
+  reason = "software-marketing register — Opterra sounds like a calm partner, not a SaaS vendor"
+
+  [[banned_terms.entries]]
+  pattern = "solution"
+  reason = "generic — name the actual thing that changes instead"
+
+  [[banned_terms.entries]]
+  pattern = "\\bAI-powered\\b|\\bpowered by AI\\b"
+  reason = "lead with the outcome, not the technology"
+
+[soft_checks]
+severity = "warn"
+plain_english = "style preferences worth a human look, not automatic rejection"
+
+  [[soft_checks.entries]]
+  name = "second_person"
+  applies_to = ["primary_text", "intro_text", "description"]
+  requires_any = ["you", "your"]
+  reason = "Opterra copy speaks directly to the practitioner — expected 'you' or 'your'"
+
+  [[soft_checks.entries]]
+  name = "sentence_fragment"
+  pattern = "^[a-z0-9][^.!?]{0,24}$"
+  applies_to = ["primary_text", "description", "intro_text"]
+  reason = "possible fragment used as a style device — Opterra writes complete sentences"
