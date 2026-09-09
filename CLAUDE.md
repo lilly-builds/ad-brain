@@ -154,6 +154,28 @@ These are a starting set built from the obvious questions. They should be
 replaced by whatever actually gets checked manually each week — if a command is
 not being rerun, rewrite it or delete it.
 
+## Category monitoring
+
+`adbrain category template | snapshot | digest | log`.
+
+Three things to hold onto:
+
+1. **Longevity is a proxy, not a measurement.** Public ad libraries publish
+   creative, never performance. Say "has run 207 days, which usually means it is
+   working" — never "performs well". Never state a competitor's CTR, spend, or
+   conversion rate; none of them are public.
+2. **The Ad Library API does not cover US commercial ads.** All ad types are
+   available for the EU/UK only; elsewhere it is political ads only. Manual
+   capture is the supported path for everyone else and is a first-class source.
+   **Do not build or use a scraper.** See `docs/ad-library-access.md`.
+3. **The product is the diff, not the dump.** A list of competitor ads is not
+   intelligence. What launched, what got killed after a long run, and who
+   arrived — that is.
+
+Classification comes from the `comp-ad-analyzer` skill via the `category-scout`
+agent, not from a taxonomy in this repo. Angle labels must be reused across
+advertisers or the comparison is worthless.
+
 ## When you touch this repo
 
 - Commit at every checkpoint, with a message naming the phase.

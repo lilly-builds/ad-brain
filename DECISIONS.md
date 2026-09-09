@@ -180,6 +180,56 @@ with its own uncertainty stated, never as "this ad performs well". Ads that
 
 ---
 
+### 8a. Manual capture is a first-class snapshot source, not a fallback
+
+**The finding that forced this.** The build brief described the Meta Ad Library
+API as "every currently-active ad from every advertiser, queryable". That is not
+what it is. Coverage is:
+
+| What | Where | How far back |
+|---|---|---|
+| Political and social-issue ads | Worldwide | 7 years |
+| **All ad types** | **EU and UK only** (a DSA obligation) | 1 year |
+| Commercial ads | Anywhere else | **Not available** |
+
+**A US-only commercial competitor is not in the API at all**, and no parameter
+changes that. The web UI shows those ads; the API does not expose them.
+
+**What was built instead.** The snapshot layer is source-agnostic. `fetch()`
+queries the API and is genuinely useful for competitors that advertise into the
+EU or UK — many software vendors do. `from_file()` reads a capture sheet filled
+in from the Ad Library web UI. Both produce the same snapshot, so a watchlist can
+mix sources and the longevity history survives switching between them.
+
+**What was deliberately not built: a scraper.** Scraping the Ad Library UI
+violates Meta's terms, breaks without notice, and a longevity history built on it
+becomes untrustworthy exactly when it matters. The manual path costs a few
+minutes per competitor per digest cycle and the data is reliable.
+
+**The real consequence:** the value of this phase was never the fetch. It is the
+diff between snapshots, the longevity tracking, and the classification — all of
+which work identically whatever the source.
+
+---
+
+### 8b. Phase 4 calls into `comp-ad-analyzer` rather than reimplementing it
+
+The build brief asked directly. The answer is **call into it** — for
+classification only.
+
+`comp-ad-analyzer` is a prompt-level framework with no code behind it: creative
+analysis, messaging strategy, positioning against category norms,
+counter-positioning. That is a taxonomy, and taxonomies belong in a skill where
+they can be revised without a commit.
+
+What it cannot do is collection, longevity tracking across snapshots, diffing, or
+persistence — it has no state. So the split is clean: the skill decides *how to
+classify*, `adbrain category` handles everything that requires memory. The
+`category-scout` agent is wired to invoke the skill rather than carry its own
+copy of the framework, so the two cannot drift.
+
+---
+
 ### 9. Phase 5 targets Canva, not Figma
 
 **Tradeoff.** Departs from the Anthropic system, which used a Figma plugin.

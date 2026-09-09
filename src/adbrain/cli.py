@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 from . import brief as brief_mod
-from . import bulk, config, ingest, memory, platforms, rank, report, runs, validate
+from . import adlibrary, bulk, category, config, ingest, memory, platforms, rank, report, runs, validate
 
 
 def _fail(message: str) -> int:
@@ -277,6 +277,106 @@ def cmd_recall(args) -> int:
     return 0
 
 
+def cmd_category(args) -> int:
+    action = args.action
+
+    if action == "template":
+        path = Path(args.output or "data/inbox/category-capture.csv")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(adlibrary.template_csv(), encoding="utf-8")
+        print(f"\n  capture sheet written to {path}")
+        print("\n  one row per competitor ad. required: advertiser, and headline or body.")
+        print("  fill `started_running` from the Ad Library's \"Started running on\" —")
+        print("  without it, longevity only counts from today and understates every")
+        print("  ad already live.\n")
+        return 0
+
+    if action == "snapshot":
+        if args.from_file:
+            ads = adlibrary.from_file(args.from_file, args.relationship)
+            print(f"\n  read {len(ads)} ads from {Path(args.from_file).name}")
+        else:
+            competitors = config.competitors()
+            targets = []
+            for rel in ("direct", "adjacent"):
+                for entry in competitors.get(rel, []):
+                    targets.append((entry, rel))
+            if not targets:
+                return _fail(
+                    "config/competitors.toml has no competitors listed.\n"
+                    "    Add them, then rerun. Include adjacent-category advertisers —\n"
+                    "    a watchlist of direct competitors only tells you what you know."
+                )
+            meta = competitors.get("meta", {})
+            countries = args.country or [meta.get("country", "US")]
+            warning = adlibrary.coverage_warning(countries)
+            if warning:
+                print(f"\n  ⚠ {warning}")
+            ads = []
+            for entry, rel in targets:
+                page_ids = [entry["page_id"]] if entry.get("page_id") else None
+                try:
+                    found = adlibrary.fetch(
+                        page_ids=page_ids,
+                        search_terms=None if page_ids else entry["name"],
+                        countries=countries,
+                        active_status=meta.get("ad_active_status", "ALL"),
+                        relationship=rel,
+                        advertiser_hint=entry["name"],
+                    )
+                except adlibrary.AdLibraryError as exc:
+                    print(f"    {entry['name']}: {exc}")
+                    continue
+                print(f"    {entry['name']}: {len(found)} ads")
+                ads.extend(found)
+            if not ads:
+                return _fail(
+                    "the API returned no ads for any competitor.\n"
+                    "    For US commercial advertisers this is expected — they are not in\n"
+                    "    the API at all. Capture manually instead:\n"
+                    "      adbrain category template\n"
+                    "      adbrain category snapshot --from-file data/inbox/category-capture.csv"
+                )
+
+        path = category.save_snapshot(ads, args.date)
+        print(f"  snapshot saved to {path.relative_to(config.repo_root())}")
+        print(f"\n  next: adbrain category digest\n")
+        return 0
+
+    if action == "digest":
+        snapshots = category.list_snapshots()
+        if not snapshots:
+            return _fail(
+                "no snapshots yet — capture one first:\n"
+                "      adbrain category template\n"
+                "      adbrain category snapshot --from-file <path>"
+            )
+        current = snapshots[-1]
+        previous = snapshots[-2] if len(snapshots) > 1 else None
+        d = category.diff(current, previous)
+        path = category.save_digest(d)
+        print()
+        print(category.render_digest(d))
+        print(f"  written to {path.relative_to(config.repo_root())}\n")
+        return 0
+
+    if action == "log":
+        if not args.angle or not args.finding:
+            return _fail("category log needs --angle and --finding")
+        exp = category.log_observation(
+            angle=args.angle,
+            finding=args.finding,
+            advertisers=args.advertiser or [],
+        )
+        print(f"\n  logged category observation {exp.id}")
+        print(f"    {exp.angle} — {exp.finding}")
+        print("\n  it will surface in future generation briefs, tagged as category")
+        print("  movement rather than as something we tested.\n")
+        return 0
+
+    return _fail(f"unknown category action: {action}")
+
+
 def cmd_limits(args) -> int:
     keys = [args.platform] if args.platform else platforms.available()
     for key in keys:
@@ -343,6 +443,18 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--focus", help="topic to weight retrieval toward")
     p.add_argument("--limit", type=int, default=12)
     p.set_defaults(func=cmd_recall)
+
+    p = sub.add_parser("category", help="competitor and category ad monitoring")
+    p.add_argument("action", choices=["template", "snapshot", "digest", "log"])
+    p.add_argument("--from-file", help="snapshot: load a manual capture (CSV or JSON)")
+    p.add_argument("--country", action="append", help="snapshot: country code, repeatable")
+    p.add_argument("--relationship", default="direct", choices=["direct", "adjacent"])
+    p.add_argument("--date", help="snapshot: override the capture date (YYYY-MM-DD)")
+    p.add_argument("--output", help="template: where to write the capture sheet")
+    p.add_argument("--angle", help="log: the angle observed")
+    p.add_argument("--finding", help="log: what it means, in one sentence")
+    p.add_argument("--advertiser", action="append", help="log: who is running it, repeatable")
+    p.set_defaults(func=cmd_category)
 
     p = sub.add_parser("limits", help="show the character limits in force")
     p.add_argument("--platform", choices=platforms.available())
