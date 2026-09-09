@@ -1,64 +1,26 @@
 # Category watchlist for Phase 4 monitoring.
 #
-# `direct` are the vendors an Opterra prospect is already evaluating.
+# `direct` are the vendors a prospect is already evaluating.
 # `adjacent` are where new angles actually come from — they sell to the same
-# owner about a different problem, and they will invent the framing that later
-# shows up in our category.
+# buyer about a different problem, and they will invent the framing that shows
+# up in this category six months later. Include them; a watchlist of only direct
+# competitors will tell you what you already know.
 #
 # `page_id` is the Meta Page ID, needed for exact Ad Library lookups. Leave it
 # empty and the fetcher falls back to a name search, which is noisier.
+# `adbrain competitors --resolve` will look up IDs for the names listed here.
 
 [meta]
 country = "US"
 ad_active_status = "ALL"     # ALL captures ads that have stopped — that is the signal
 languages = ["en"]
 
-[[direct]]
-name = "Mindbody"
-page_id = ""
-note = "the incumbent; expensive and bloated is the standing complaint"
+# [[direct]]
+# name = ""
+# page_id = ""
+# note = "what they are known for, and what complaint follows them"
 
-[[direct]]
-name = "Vagaro"
-page_id = ""
-note = "clunky UI, poor support"
-
-[[direct]]
-name = "Zenoti"
-page_id = ""
-note = "enterprise complexity in a small-practice world"
-
-[[direct]]
-name = "Mangomint"
-page_id = ""
-note = "closest on design; watch them for AI/automation messaging"
-
-[[direct]]
-name = "Jane App"
-page_id = ""
-note = "Canada-centric; watch for US expansion messaging"
-
-[[adjacent]]
-name = "Podium"
-page_id = ""
-note = "messaging and reviews for local business — owns the 'missed call' angle"
-
-[[adjacent]]
-name = "Weave"
-page_id = ""
-note = "dental/practice phones + comms; closest analogue to the receptionist pitch"
-
-[[adjacent]]
-name = "Boulevard"
-page_id = ""
-note = "salon/spa self-care vertical; strong brand-led creative"
-
-[[adjacent]]
-name = "Housecall Pro"
-page_id = ""
-note = "different vertical, same owner-operator psychology"
-
-[[adjacent]]
-name = "Ruby Receptionists"
-page_id = ""
-note = "human answering service — the non-software alternative we displace"
+# [[adjacent]]
+# name = ""
+# page_id = ""
+# note = "why they matter — which angle they own that could reach this category"

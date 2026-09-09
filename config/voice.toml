@@ -1,78 +1,82 @@
-# Opterra voice rules, in machine-enforceable form.
+# Voice rules, in machine-enforceable form.
 #
-# Source of truth for humans is brand/voice.md. This file is the subset a
-# program can actually check. Every generated line is run through these before
-# it is allowed into an output file.
+# This is the gate. `brand/voice.md` is the human explanation; this file is what
+# actually rejects a line. If a rule is not here, the validator will not catch
+# it, no matter how clearly it is written in the markdown.
 #
-# severity = "error"   -> line is rejected and sent back for regeneration
-# severity = "warn"    -> line passes but is listed in the report for review
+# Shipped as a neutral starter set. Edit it for the brand — every section can be
+# emptied, loosened, or extended without touching code.
+#
+# severity = "error"  -> line is rejected and sent back for regeneration
+# severity = "warn"   -> line passes but is listed in the report for review
 
+# ---------------------------------------------------------------------------
+# Letter case.
+#   rule = "any"        -> no case rule (default; most brands)
+#   rule = "lowercase"  -> reject any capital outside the allow-list
+#   rule = "sentence"   -> reject ALL-CAPS words outside the allow-list
+# ---------------------------------------------------------------------------
 [case]
+rule = "any"
 severity = "error"
-rule = "lowercase"
-plain_english = "all ad copy is lowercase — no sentence case, no title case, no ALL CAPS"
-# Tokens allowed to keep their capitalisation despite the lowercase rule.
-# Add client names and proper nouns here as they come up.
-allow_capitalized = [
-  "Opterra",
-  "Mindbody",
-  "Vagaro",
-  "Zenoti",
-  "Mangomint",
-  "Jane App",
-  "Dawn",
-  "West Asheville Acupuncture",
-  "Dr. Kristi",
-]
+plain_english = "no case rule set — set rule = \"lowercase\" or \"sentence\" if the brand has one"
+# Proper nouns exempt from the case rule. Add brand and customer names here.
+allow_capitalized = []
 
+# ---------------------------------------------------------------------------
+# Emoji. Most paid-search copy bans them outright; social brands often do not.
+# Set severity = "warn" to allow them with a flag, or delete this section.
+# ---------------------------------------------------------------------------
 [emoji]
 severity = "error"
-plain_english = "no emoji in ad copy, on any platform"
+plain_english = "no emoji in ad copy"
 
+# ---------------------------------------------------------------------------
+# Banned words and phrases.
+#
+# The entries below are generic ad-copy filler that reads as noise in almost any
+# category — they are a starting point, not a position on the brand. Delete any
+# that do not apply and add the brand's own. `pattern` is a regular expression,
+# matched case-insensitively.
+# ---------------------------------------------------------------------------
 [banned_terms]
 severity = "error"
-plain_english = "words and phrases that are off-voice for Opterra"
+plain_english = "words and phrases this brand does not use"
 
   [[banned_terms.entries]]
-  pattern = "healer"
-  reason = "never call the audience healers — use 'practice owner', 'wellness business owner', or 'you'"
+  pattern = "cutting.edge|state.of.the.art|revolutionary|game.chang|best.in.class|world.class|next.generation"
+  reason = "superlative filler — says nothing a buyer can picture"
 
   [[banned_terms.entries]]
-  pattern = "you're losing|you are losing|losing money|lost revenue"
-  reason = "fear-based framing — Opterra never sells on loss"
+  pattern = "\\bleverage\\b|\\bsynergy\\b|\\brobust\\b|\\bseamless(ly)?\\b|\\bempower\\b|\\bsupercharge\\b|\\bturbocharge\\b"
+  reason = "vendor register — reads as marketing, not as a person talking"
 
   [[banned_terms.entries]]
-  pattern = "don't miss out|dont miss out|missing out|before it's too late|last chance|act now|hurry"
-  reason = "manufactured urgency — banned unless the scarcity is genuine and named"
+  pattern = "don't miss out|dont miss out|before it's too late|last chance|act now|limited time only"
+  reason = "manufactured urgency — only allowed when the scarcity is genuine and named"
 
-  [[banned_terms.entries]]
-  pattern = "cutting.edge|state.of.the.art|revolutionary|game.chang|best.in.class|world.class"
-  reason = "corporate filler — says nothing a practice owner can picture"
-
-  [[banned_terms.entries]]
-  pattern = "streamline|leverage|synergy|robust|seamless|empower|unlock|supercharge|turbocharge"
-  reason = "software-marketing register — Opterra sounds like a calm partner, not a SaaS vendor"
-
-  [[banned_terms.entries]]
-  pattern = "solution"
-  reason = "generic — name the actual thing that changes instead"
-
-  [[banned_terms.entries]]
-  pattern = "\\bAI-powered\\b|\\bpowered by AI\\b"
-  reason = "lead with the outcome, not the technology"
-
+# ---------------------------------------------------------------------------
+# Style preferences. Flagged for a human, never auto-rejected.
+# `applies_to` limits a check to specific fields; omit it to check everywhere.
+# ---------------------------------------------------------------------------
 [soft_checks]
 severity = "warn"
 plain_english = "style preferences worth a human look, not automatic rejection"
 
   [[soft_checks.entries]]
   name = "second_person"
-  applies_to = ["primary_text", "intro_text", "description"]
+  applies_to = ["primary_text", "intro_text"]
   requires_any = ["you", "your"]
-  reason = "Opterra copy speaks directly to the practitioner — expected 'you' or 'your'"
+  reason = "body copy usually reads better addressed directly to the reader"
 
-  [[soft_checks.entries]]
-  name = "sentence_fragment"
-  pattern = "^[a-z0-9][^.!?]{0,24}$"
-  applies_to = ["primary_text", "description", "intro_text"]
-  reason = "possible fragment used as a style device — Opterra writes complete sentences"
+# ---------------------------------------------------------------------------
+# Numeric claims. Any number in generated copy that does not appear in
+# brand/proof.md or in `always_allowed` gets flagged for verification.
+#
+# This is the check that stops the system inventing a statistic. Keep it on.
+# `always_allowed` is for descriptive numbers that are not performance claims.
+# ---------------------------------------------------------------------------
+[claims]
+severity = "warn"
+plain_english = "numbers in ad copy must trace to an approved proof point"
+always_allowed = ["24/7", "24", "7", "365", "1", "2", "3", "5", "10"]

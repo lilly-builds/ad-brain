@@ -1,7 +1,7 @@
 # ad-brain
 
-Growth marketing automation for **Opterra Ventures**, modelled on the system
-Anthropic's own growth marketing team built and documented in
+Growth marketing automation, modelled on the system Anthropic's own growth
+marketing team built and documented in
 [How Anthropic teams use Claude Code](https://www-cdn.anthropic.com/58284b19e702b49db9302d5b6f135ad8871e7658.pdf)
 (section: *Claude Code for growth marketing*).
 
@@ -30,20 +30,49 @@ Workflow 4 closes that, and writes its findings into the same log as workflow 2
 so the copy agent sees both what we have tested and what the category is
 currently running.
 
+## The brand layer
+
+The engine is brand-agnostic. It enforces whatever it is told to enforce, and
+every brand-specific fact is configuration:
+
+| File | What goes in it |
+|---|---|
+| `brand/voice.md` | how the copy should sound, in prose, for the writers |
+| `brand/icp.md` | who is being sold to, and what this replaces |
+| `brand/proof.md` | the only claims the copy agent is allowed to make |
+| `config/voice.toml` | the enforceable subset — what `validate` actually rejects |
+| `config/competitors.toml` | who to watch in Phase 4 |
+
+These ship as **templates**. Fill them in before the first real run. Until then
+the validator still enforces platform character limits, bans emoji, catches
+generic ad filler, and flags any number that does not trace to an approved
+claim — so the system is useful on day one and gets sharper as the brand layer
+is filled in.
+
+Running for several brands: keep one filled-in `brand/` + `config/` pair per
+client and swap the directory.
+
 ## Quick start
 
 ```bash
 # no install step — zero dependencies, Python 3.11+
-python3 -m adbrain --help          # from repo root, or:
-pip install -e .  &&  adbrain --help
+export PYTHONPATH=src
+python3 -m adbrain --help          # or: pip install -e . && adbrain --help
 
-# run the whole loop against the bundled sample export
-adbrain rank    --input data/fixtures/google_rsa_sample.csv --platform google_rsa
-adbrain brief   --run latest       # writes the generation brief the sub-agents read
-# ...Claude generates candidates via .claude/agents/ ...
-adbrain validate --run latest      # rejects anything over limit or off-voice
-adbrain build   --run latest       # bulk CSV + human-readable diff
-adbrain log     --run latest       # writes the experiment record
+# the loop, against the bundled synthetic export
+python3 -m adbrain rank --input data/fixtures/google_rsa_sample.csv --platform google_rsa
+#   ranks the account, flags underperformers, writes brief.md for the sub-agents
+#   ...the copy sub-agents in .claude/agents/ write candidates.json...
+python3 -m adbrain validate --run latest   # rejects anything over limit or off-voice
+python3 -m adbrain build    --run latest   # bulk CSV (imports paused) + change report
+python3 -m adbrain log      --run latest   # records what we are testing and why
+```
+
+Useful on their own:
+
+```bash
+python3 -m adbrain limits --platform meta          # what the limits currently are
+python3 -m adbrain check "one tool, not five" --platform google_rsa --field headline
 ```
 
 Or just open Claude Code in this repo and say **"refresh the underperforming

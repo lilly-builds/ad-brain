@@ -7,17 +7,37 @@ the one-line reversal.
 
 ---
 
+### 0. The engine is brand-agnostic; the brand is configuration
+
+**Tradeoff.** A system hardwired to one brand's voice can be more opinionated —
+it can bake the rules into the prompts and skip the config layer entirely.
+
+**Why not.** Voice, ICP, proof points and the competitor list all live in
+`brand/` and `config/` as templates, and the code knows nothing about any
+particular brand. That means the same repo runs for a second brand by swapping a
+directory, the voice rules can change without a code change, and — most
+importantly — the enforcement layer stays honest: it checks what it is *told* to
+check, so nobody has to guess whether a rule is live.
+
+**The cost:** an unfilled `brand/` produces generic copy. That is the system
+working correctly on an empty brief, but it does mean the templates are a real
+prerequisite, not optional polish.
+
+**Reverse it:** there is nothing to reverse — fill in `brand/` and the system
+becomes exactly as opinionated as the brand is.
+
+---
+
 ### 1. Both Google Ads and Meta in scope, via a data-driven spec registry
 
 **Tradeoff.** Building for two platforms normally doubles the surface area —
 different limits, exports, and bulk formats.
 
-**Why it did not here.** The `ad-creative` skill already carries verified specs
-for Google RSA, Google PMax, Meta, LinkedIn and TikTok. Encoding them as *data*
-in `config/platforms.toml` rather than as code means the validator, the brief
-builder and the CSV writer are all platform-agnostic and adding a platform is
-five lines of TOML. The doubling would only have happened if I had written
-per-platform logic.
+**Why it did not here.** Encoding limits as *data* in `config/platforms.toml`
+rather than as code means the validator, the brief builder and the CSV writer are
+all platform-agnostic, and adding a platform is five lines of TOML. The doubling
+would only have happened with per-platform logic. Google RSA, Google PMax, Meta,
+LinkedIn and TikTok limits ship registered.
 
 **What is genuinely per-platform** and therefore only built where needed: the
 export parser and the bulk-upload writer. Google RSA and Meta are done; LinkedIn
@@ -67,9 +87,9 @@ platform's true maximum is recorded as `hard_max` alongside, so nothing is lost.
 
 **Reverse it:** set `limit = hard_max` for that field in `config/platforms.toml`.
 
-**Open conflict to resolve:** the `ad-creative` skill states Meta description as
-25 characters in `SKILL.md` and 30 in `references/platform-specs.md`. This repo
-uses **30**, from the fuller reference doc. Worth reconciling the skill.
+**Note.** Published Meta description limits vary between 25 and 30 characters
+depending on the source. This repo uses **30**. If uploads start getting
+truncated in a placement that matters, drop it to 25 — one number, one file.
 
 ---
 
@@ -148,10 +168,9 @@ with its own uncertainty stated, never as "this ad performs well". Ads that
 **Tradeoff.** Departs from the Anthropic system, which used a Figma plugin.
 
 **Why.** Canva is already connected to this workspace as an MCP server with
-design generation, brand templates, and bulk export. Figma is not connected and
-there is no evidence Opterra's creative lives there. Building a Figma plugin
-would mean introducing a tool as well as automating one. Full evaluation of both
-open-source plugins is in `docs/creative-scale.md`.
+design generation, brand templates, and bulk export. Figma is not connected, and
+building a Figma plugin would mean introducing a tool as well as automating one.
+Full evaluation of both open-source plugins is in `docs/creative-scale.md`.
 
 **Reverse it:** if creative does live in Figma, `docs/creative-scale.md` has the
 fork-vs-build assessment ready.

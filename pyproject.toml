@@ -1,7 +1,7 @@
 [project]
 name = "adbrain"
 version = "0.1.0"
-description = "Growth marketing automation for Opterra Ventures — ad copy generation, experiment memory, and category monitoring."
+description = "Brand-agnostic growth marketing automation — ad copy generation, experiment memory, and category monitoring."
 requires-python = ">=3.11"
 
 # Deliberately zero runtime dependencies. Everything uses the Python standard

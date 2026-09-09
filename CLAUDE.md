@@ -1,12 +1,34 @@
 # CLAUDE.md — operating manual for ad-brain
 
-This repo is Opterra's growth marketing system. Read this before doing anything
-in it. It is maintained as the system grows — when you learn something about how
-this repo should behave, write it down here.
+This repo is a growth marketing system. Read this before doing anything in it.
+It is maintained as the system grows — when you learn something about how this
+repo should behave, write it down here.
+
+## The engine is brand-agnostic
+
+Nothing about any particular brand's voice is hardcoded. The engine enforces
+whatever it is told to enforce, and the brand is configuration:
+
+| What | Where | Read by |
+|---|---|---|
+| Voice, in prose | `brand/voice.md` | the copy sub-agents |
+| Voice, enforceable | `config/voice.toml` | `adbrain validate` |
+| ICP and positioning | `brand/icp.md` | the copy sub-agents |
+| Approved claims | `brand/proof.md` | `adbrain validate` |
+| Competitor watchlist | `config/competitors.toml` | Phase 4 |
+
+These ship as **templates**. Until they are filled in, the validator enforces
+only the platform character limits and a neutral starter set of banned filler.
+Running against an unfilled `brand/` will produce generic copy — that is the
+system working correctly on an empty brief, not a bug.
+
+**Running for more than one brand:** keep one filled-in `brand/` + `config/`
+pair per client and swap the directory, or clone the repo per client. Do not add
+per-client branches in code.
 
 ## Who you are working with
 
-Lilly runs Opterra Ventures and wants to be **hands-off**. That means:
+Lilly wants to be **hands-off**. That means:
 
 - Make the call yourself on reversible decisions. Record it in `DECISIONS.md`
   with how to reverse it, rather than asking.
@@ -19,10 +41,11 @@ Lilly runs Opterra Ventures and wants to be **hands-off**. That means:
 
 ## The prime directive
 
-**Never invent a proof point.** Every number, client name, or outcome in ad copy
-must already exist in `brand/proof.md`. If a generated line needs a claim that is
-not there, regenerate the line — do not add the claim. This is the one rule that
-matters more than output volume.
+**Never invent a proof point.** Every number, customer name, or outcome in ad
+copy must already exist in `brand/proof.md`. If a generated line needs a claim
+that is not there, regenerate the line — do not add the claim. This is the one
+rule that matters more than output volume, and it is enforced: `validate` flags
+any number that does not trace to an approved claim.
 
 ## The loop
 
@@ -73,14 +96,18 @@ failure. See `DECISIONS.md` #4.
 
 ## Voice
 
-`brand/voice.md` for humans, `config/voice.toml` for the validator. The rules the
-validator hard-fails on: lowercase, no emoji, no fear framing, no corporate
-filler, never "healer". Proper nouns keep their capitals via an allow-list.
+`brand/voice.md` for humans, `config/voice.toml` for the validator. A rule that
+exists only in the markdown is not enforced — if it matters, encode it.
 
-The `ad-creative` skill (user-level, not in this repo) holds the fuller creative
-framework — angle selection, the 15 creative types, the 5×5×5 Meta rule.
-**Invoke that skill when generating**; this repo enforces and remembers, the
-skill decides what to write. Do not copy its contents in here — it will drift.
+The validator ships checking: emoji, a neutral set of ad-copy filler, and any
+number that does not trace to `brand/proof.md`. The letter-case rule
+(`[case] rule`) defaults to `any`; set it to `lowercase` or `sentence` if the
+brand has one, and list proper nouns in `allow_capitalized` so they survive it.
+
+**Creative strategy is not this repo's job.** Angle selection, creative-type
+choice, and the structure of a good ad belong in a skill. If the brand has one,
+invoke it when generating and let this repo do what it is good at: enforcing and
+remembering. Do not copy a skill's contents in here — it will drift out of sync.
 
 ## Memory
 
@@ -98,6 +125,6 @@ together.
 ## When you touch this repo
 
 - Commit at every checkpoint, with a message naming the phase.
-- Run `python3 -m pytest tests/ -q` before committing. It is fast and has no
-  dependencies.
+- Run `PYTHONPATH=src python3 -m unittest discover -s tests` before committing.
+  It is fast and needs nothing installed.
 - Update this file when a convention changes.
