@@ -16,7 +16,7 @@ reconstructs those four and adds two more that close a gap in the original.
 | 2 | **Experiment memory** | Logs the hypothesis, variables and outcome of every run; pulls prior results into context before generating, so the system stops re-testing angles that already lost | ✅ |
 | 3 | **Live campaign data** | Queries campaign performance in-session through the official Meta and Google Ads MCP servers, both read-only, instead of exporting CSVs | ✅ |
 | 4 | **Category monitoring** | Watches competitor and adjacent-category ads, using creative longevity as the performance proxy, and reports what *changed* since last capture | ✅ |
-| 5 | **Creative variation at scale** | Fans one approved angle out into many sized creatives | 📋 assessed, see `docs/creative-scale.md` |
+| 5 | **Creative variation at scale** | Fans approved, validated copy out into sized creatives via Canva | ⚠ built for Canva; needs one answer — see below |
 
 Workflow 2 is the one that compounds. Everything else gets faster; only memory
 gets *better*.
@@ -92,6 +92,16 @@ data/inbox/       drop platform exports here
 data/out/         generated bulk CSVs and diff reports
 docs/             auth setup, MCP assessment, and the Phase 5 evaluation
 ```
+
+## One open question
+
+**Where does your creative actually live?** Phase 5 is built against Canva,
+which is already connected to this workspace. If creative lives in Figma
+instead, that is a small build but a different one — and if it is outsourced to
+a designer, skip the phase entirely, because Phase 1 already emits validated
+copy they can work straight from. Full reasoning in `docs/creative-scale.md`.
+
+Nothing else is blocked on this.
 
 ## Reading order
 

@@ -230,14 +230,29 @@ copy of the framework, so the two cannot drift.
 
 ---
 
-### 9. Phase 5 targets Canva, not Figma
+### 9. Phase 5 targets Canva, not Figma — and forks neither open-source plugin
 
 **Tradeoff.** Departs from the Anthropic system, which used a Figma plugin.
 
-**Why.** Canva is already connected to this workspace as an MCP server with
-design generation, brand templates, and bulk export. Figma is not connected, and
-building a Figma plugin would mean introducing a tool as well as automating one.
-Full evaluation of both open-source plugins is in `docs/creative-scale.md`.
+**On the two plugins the brief named:** neither could be verified to exist at the
+path given, and their star counts (5 and 0) settle it regardless. A 0-star repo
+is not a dependency, it is someone's weekend, and forking it means owning it from
+day one. "Wire rather than build" is the right instinct — it is why Phases 3 and
+4 use vendor servers — but it only applies when the existing thing is actually
+load-bearing. At ~150 lines, this one is not.
 
-**Reverse it:** if creative does live in Figma, `docs/creative-scale.md` has the
-fork-vs-build assessment ready.
+**Why Canva.** It is already connected here, with brand templates, per-template
+datasets, resize, and export. Figma is not connected, and building a Figma plugin
+would mean **introducing a tool as well as automating one** — a workflow change
+wearing an automation costume, which is how automation projects quietly fail.
+
+**Known gap:** Canva documents an `autofill-design` tool that would fill a
+template in one call. It is not exposed in the connector build available here, so
+a batch is create → edit → export per variation. Fine for tens of variations;
+worth revisiting before hundreds.
+
+**This one is genuinely unresolved,** and it is the only open question in the
+build. If creative lives in Figma, the plugin is a small fresh build. If it is
+outsourced, skip the phase — Phase 1 already emits validated copy a designer can
+work from, which may be the entire job. `docs/creative-scale.md` has all three
+paths.
