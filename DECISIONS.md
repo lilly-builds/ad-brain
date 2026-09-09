@@ -111,39 +111,56 @@ markdown stays as the human view.
 
 ---
 
-### 6. The official Meta Ads MCP, used read-only by convention
+### 6. The official Meta Ads MCP, granted read-only scope
 
-**Tradeoff.** The official server at `mcp.facebook.com/ads` grants **full write
-access to the live ad account — no draft mode, no confirmation step, no undo.**
-It is not possible to request a read-only scope; the beta does not offer one.
+**Tradeoff.** With `ads_read` only, nothing in this system can pause an ad,
+change a budget, or launch a campaign from a chat message. Every action needs a
+human in Ads Manager.
 
-**Why use it anyway.** It is Meta's own, OAuth-authenticated, with no token to
-create or rotate, and it replaces a third of the original build. The
-alternatives are third-party servers that want long-lived credentials.
+**Why.** The scope picker in Meta's OAuth flow offers read-only, read/write, and
+read/write/financial. Read/write (`ads_management`) has **no draft mode, no
+confirmation screen, and no undo** — a model that misreads a request can change
+live spend directly. The convenience it buys is real but small; this system's
+output is a bulk CSV that imports paused and gets reviewed anyway.
 
-**How the risk is contained.** `CLAUDE.md` and `docs/meta-ads-mcp.md` require
-that any campaign-mutating tool call be confirmed with Lilly first, every time.
-The analysis commands in `.claude/commands/` are read-only by construction.
-This is a convention, not a technical guarantee — it is the honest state of the
-beta, and worth knowing before connecting.
+So the safety property is enforced by Meta rather than promised by a convention
+in a markdown file. Conventions are exactly what fail under time pressure.
 
-**Reverse it:** disconnect the connector; fall back to CSV exports, which is how
-Phase 1 already works.
+**Why this server at all:** it is Meta's own, OAuth-authenticated in the browser,
+with no token to create, store, or rotate. Every third-party alternative wants a
+long-lived credential in a config file.
+
+**Correction to an earlier draft of this file:** it claimed the beta offered no
+read-only scope. That was wrong — `ads_read` exists and is what we grant. Setup
+and the full scope table are in `docs/meta-ads-mcp.md`.
+
+**Reverse it:** re-run the OAuth flow and add `ads_management`. Widening later
+is easy; narrowing after an accident is not.
 
 ---
 
-### 7. Google Ads gets CSV export, not an MCP connection
+### 7. Google Ads gets the official MCP too — it is read-only by construction
 
-**Tradeoff.** Google campaign analysis stays a manual export step.
+**Tradeoff.** Setup is genuinely more work than Meta's: a Google Cloud project,
+a developer token (with an access-level application and review), and OAuth
+credentials. Roughly an hour, versus Meta's few minutes.
 
-**Why.** Google's official MCP offering does not currently match Meta's — the
-credential path is a developer token plus OAuth client plus refresh token, which
-is real setup work for a non-technical operator. Google Ads Editor's CSV export
-is the format the bulk upload has to match anyway, so the export is not wasted
-motion. Revisit when Google ships an OAuth-only server.
+**Why it is still worth it.** Google shipped an official server on 28 April 2026
+(`googleads/google-ads-mcp`, Apache 2.0) that **cannot write at all** — it
+exposes three read-only tools and no mutation path. It is structurally safer
+than the Meta integration, not just configured more carefully.
 
-**Reverse it:** `docs/google-ads-mcp.md` has the full assessment and the
-credential path if it becomes worth it.
+Its surface is deliberately small: `list_accessible_customers`,
+`get_resource_metadata`, and `search`, which runs GAQL. That makes the analysis
+commands in `.claude/commands/` saved queries rather than wrappers around
+pre-baked tools, which ages better.
+
+**Correction to an earlier draft of this file:** it said Google had no offering
+matching Meta's and recommended CSV exports instead. That was wrong.
+
+**Not blocking:** Phase 1 runs entirely on CSV exports, and Google Ads Editor's
+export format is what the bulk upload has to match anyway. Connect the server
+when there is an hour spare, not before the system is useful.
 
 ---
 

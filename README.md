@@ -14,7 +14,7 @@ reconstructs those four and adds two more that close a gap in the original.
 |---|---|---|---|
 | 1 | **Ad copy agent** | Ingests a performance export, ranks and flags underperformers, regenerates replacements through two specialised sub-agents, enforces character limits programmatically, emits a bulk-upload CSV plus a diff explaining every change | ✅ |
 | 2 | **Experiment memory** | Logs the hypothesis, variables and outcome of every run; pulls prior results into context before generating, so the system stops re-testing angles that already lost | ✅ |
-| 3 | **Live campaign data** | Queries campaign performance in-session through the official Meta Ads MCP, instead of exporting CSVs | ✅ |
+| 3 | **Live campaign data** | Queries campaign performance in-session through the official Meta and Google Ads MCP servers, both read-only, instead of exporting CSVs | ✅ |
 | 4 | **Category monitoring** | Watches competitor and adjacent-category ads through the Meta Ad Library, using creative longevity as the performance proxy, and reports what *changed* | ✅ |
 | 5 | **Creative variation at scale** | Fans one approved angle out into many sized creatives | 📋 assessed, see `docs/creative-scale.md` |
 

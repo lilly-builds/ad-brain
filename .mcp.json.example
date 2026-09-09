@@ -1,0 +1,22 @@
+{
+  "_comment": "Copy to .mcp.json and fill in. See docs/meta-ads-mcp.md and docs/google-ads-mcp.md. Grant Meta read-only (ads_read) — the Google server is read-only by construction.",
+  "mcpServers": {
+    "meta-ads": {
+      "type": "http",
+      "url": "https://mcp.facebook.com/ads"
+    },
+    "google-ads": {
+      "command": "pipx",
+      "args": [
+        "run",
+        "--spec",
+        "git+https://github.com/googleads/google-ads-mcp.git",
+        "google-ads-mcp"
+      ],
+      "env": {
+        "GOOGLE_PROJECT_ID": "your-gcp-project-id",
+        "GOOGLE_ADS_DEVELOPER_TOKEN": "your-developer-token"
+      }
+    }
+  }
+}

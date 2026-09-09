@@ -134,6 +134,26 @@ Category observations from Phase 4 land in the same log tagged
 `source: external`, so when the copy agent generates it sees both what we have
 tested and what the category is currently running.
 
+## Live campaign data
+
+Two MCP servers, both connected **read-only**, set up in `docs/meta-ads-mcp.md`
+and `docs/google-ads-mcp.md`:
+
+- **Meta** — `https://mcp.facebook.com/ads`, granted `ads_read` only. The write
+  scope (`ads_management`) has no draft mode and no undo; we do not grant it.
+- **Google** — `googleads/google-ads-mcp`, read-only by construction, three
+  tools with GAQL as the query surface.
+
+**Never call a tool that changes a live campaign, budget, or ad status.** If the
+right answer is "pause this", say so and let a human do it in the platform. The
+system's output is a bulk CSV that imports paused and gets reviewed — keep that
+property.
+
+Named analysis commands: `/perf-summary`, `/creative-scorecard`, `/spend-pacing`.
+These are a starting set built from the obvious questions. They should be
+replaced by whatever actually gets checked manually each week — if a command is
+not being rerun, rewrite it or delete it.
+
 ## When you touch this repo
 
 - Commit at every checkpoint, with a message naming the phase.
